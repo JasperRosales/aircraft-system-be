@@ -16,7 +16,7 @@ func main() {
 	godotenv.Load()
 
 	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{"stdout", "logs/api.log"}
+	config.OutputPaths = []string{"logs/api.log"}
 	logger, err := config.Build()
 	if err != nil {
 		panic("Failed to initialize logger: " + err.Error())

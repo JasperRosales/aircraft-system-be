@@ -1,0 +1,51 @@
+# Version control
+.git
+.gitignore
+
+# IDE and editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker files (not needed inside container)
+Dockerfile
+docker-compose*.yml
+.air.toml
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Build artifacts and binaries
+bin/
+*.log
+
+# Logs
+logs/
+
+# Tests and CI
+test/
+.cirun.yml
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Coverage
+coverage.out
+*.coverprofile
+

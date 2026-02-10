@@ -14,3 +14,6 @@ branch:
 	@git add .
 	@git commit -m "$(m)"
 	@git push --set-upstream origin $(b)
+
+ping:
+	@curl http://localhost:8080/ping
