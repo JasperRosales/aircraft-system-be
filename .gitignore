@@ -4,5 +4,7 @@ logs/*
 logs/
 *.log
 *.tmp
+bin/
+bin/*
 test/
 *_test.go
