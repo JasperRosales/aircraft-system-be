@@ -1,0 +1,1 @@
+{"level":"info","ts":1770724672.9282172,"caller":"middleware/logger.go:17","msg":"Incoming request","method":"GET","path":"/ping","status":200,"client_ip":"::1","latency":0.000055271}
