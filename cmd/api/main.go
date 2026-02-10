@@ -9,27 +9,30 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 
 	"github.com/JasperRosales/aircraft-system-be/internal/controller"
 	"github.com/JasperRosales/aircraft-system-be/internal/middleware"
 	"github.com/JasperRosales/aircraft-system-be/internal/repository"
 	"github.com/JasperRosales/aircraft-system-be/internal/routers"
 	"github.com/JasperRosales/aircraft-system-be/internal/service"
+	"github.com/JasperRosales/aircraft-system-be/internal/util"
 )
 
 func main() {
 	godotenv.Load()
 
-	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{"logs/api.log"}
-	logger, err := config.Build()
+	// Ensure log directory exists
+	if err := util.EnsureLogDirectory(); err != nil {
+		log.Printf("Warning: Failed to create log directory: %v", err)
+	}
+
+	logger, err := util.NewLogger()
 	if err != nil {
 		panic("Failed to initialize logger: " + err.Error())
 	}
 	defer logger.Sync()
 
-	db, err := initDatabase()
+	db, err := initDatabase(logger)
 	if err != nil {
 		logger.Fatal("Failed to initialize database", zap.Error(err))
 	}
@@ -37,7 +40,7 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 	jwtSvc := service.NewJWTService()
-	userSvc := service.NewUserService(userRepo, jwtSvc)
+	userSvc := service.NewUserService(userRepo, jwtSvc, logger)
 	userCtrl := controller.NewUserController(userSvc, jwtSvc)
 
 	router := gin.New()
@@ -53,26 +56,30 @@ func main() {
 	})
 
 	api := router.Group("/api")
-	routers.SetupUserRoutes(api, userCtrl)
+	routers.SetupUserRoutes(api, userCtrl, jwtSvc, logger)
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("PORT environment variable not set")
+		logger.Fatal("PORT environment variable not set")
 	}
 
 	logger.Info("Starting server", zap.String("port", port))
 	router.Run(":" + port)
 }
 
-func initDatabase() (*gorm.DB, error) {
+func initDatabase(logger *util.Logger) (*gorm.DB, error) {
 	dsn := os.Getenv("GOOSE_DBSTRING")
 	if dsn == "" {
+		logger.Warn("GOOSE_DBSTRING not set, database connection skipped")
 		return nil, nil
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-	})
+	// Create a GORM logger that writes to Zap
+	gormConfig := &gorm.Config{
+		Logger: util.NewGormLogger(logger.Logger),
+	}
+
+	db, err := gorm.Open(postgres.Open(dsn), gormConfig)
 	if err != nil {
 		return nil, err
 	}

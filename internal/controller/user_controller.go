@@ -3,7 +3,6 @@ package controller
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -19,7 +18,6 @@ type UserController struct {
 func NewUserController(svc *service.UserService, jwtSvc *service.JWTService) *UserController {
 	return &UserController{service: svc, jwtService: jwtSvc}
 }
-
 
 func (c *UserController) Register(ctx *gin.Context) {
 	var req models.RegisterRequest
@@ -41,7 +39,6 @@ func (c *UserController) Register(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, resp)
 }
 
-
 func (c *UserController) Login(ctx *gin.Context) {
 	var req models.LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -59,16 +56,15 @@ func (c *UserController) Login(ctx *gin.Context) {
 		return
 	}
 
-	cookie := &http.Cookie{
-		Name:     service.CookieName,
-		Value:    resp.Token,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-		Expires:  time.Now().Add(c.jwtService.GetExpiryDuration()),
-	}
-	http.SetCookie(ctx.Writer, cookie)
+	ctx.SetCookie(
+		service.CookieName,
+		resp.Token,
+		int(c.jwtService.GetExpiryDuration().Seconds()),
+		"/",
+		"",
+		false,
+		true, // HttpOnly
+	)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"user": resp.User,
@@ -156,16 +152,15 @@ func (c *UserController) Delete(ctx *gin.Context) {
 }
 
 func (c *UserController) Logout(ctx *gin.Context) {
-	cookie := &http.Cookie{
-		Name:     service.CookieName,
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   -1,
-	}
-	http.SetCookie(ctx.Writer, cookie)
+	ctx.SetCookie(
+		service.CookieName,
+		"",
+		-1,
+		"/",
+		"",
+		false,
+		true,
+	)
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }

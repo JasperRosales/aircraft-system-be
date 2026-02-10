@@ -1,5 +1,8 @@
 .env
 docker-compose.yml
+logs/*
 logs/
 *.log
 *.tmp
+test/
+*_test.go
