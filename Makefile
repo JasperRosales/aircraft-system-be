@@ -17,3 +17,8 @@ branch:
 
 ping:
 	@curl http://localhost:8080/ping
+
+set-github:
+	@git config --global user.name "$(name)"
+	@git config --global user.email "$(email)"
+
