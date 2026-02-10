@@ -10,6 +10,8 @@ services:
       - .:/app
     working_dir: /app
     environment:
+      SECRET: "cc794831542079f8475c6d3749a3aa7feaa0a240f09c792030443a62"
+      TOKEN_EXP: "24"
       GOOSE_DRIVER: "postgres"
       GOOSE_DBSTRING: "postgresql://postgres.nhwpditkyufxixofaxkr:Skurohoshi26@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
       GOOSE_MIGRATION_DIR: "./database/migrations"
