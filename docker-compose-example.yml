@@ -9,4 +9,8 @@ services:
     volumes:
       - .:/app
     working_dir: /app
+    environment:
+      GOOSE_DRIVER:
+      GOOSE_DBSTRING: 
+      GOOSE_MIGRATION_DIR: "./database/migrations"
     command: go run ./cmd/api

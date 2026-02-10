@@ -9,4 +9,8 @@ services:
     volumes:
       - .:/app
     working_dir: /app
+    environment:
+      GOOSE_DRIVER: "postgres"
+      GOOSE_DBSTRING: "postgresql://postgres.nhwpditkyufxixofaxkr:Skurohoshi26@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
+      GOOSE_MIGRATION_DIR: "./database/migrations"
     command: go run ./cmd/api
