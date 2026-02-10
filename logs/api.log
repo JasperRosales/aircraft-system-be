@@ -1,9 +1,0 @@
-{"level":"info","ts":"2026-02-11T07:10:12.440+0800","caller":"api/main.go:39","msg":"Database connected successfully"}
-{"level":"info","ts":"2026-02-11T07:10:12.440+0800","caller":"api/main.go:66","msg":"Starting server","port":"8080"}
-{"level":"info","ts":"2026-02-11T07:10:31.490+0800","caller":"api/main.go:39","msg":"Database connected successfully"}
-{"level":"info","ts":"2026-02-11T07:10:31.491+0800","caller":"api/main.go:66","msg":"Starting server","port":"8080"}
-{"level":"info","ts":"2026-02-11T07:10:34.030+0800","caller":"middleware/auth.go:17","msg":"Auth: Checking cookie","cookie_name":"auth_token","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJuYW1lIjoiQXNwZXJUaGVHaG9zdCIsInJvbGUiOiJ1c2VyIiwiaXNzIjoiYWlyY3JhZnQtc3lzdGVtIiwic3ViIjoiMSIsImV4cCI6MTc3MDg1MDMwNiwibmJmIjoxNzcwNzYzOTA2LCJpYXQiOjE3NzA3NjM5MDZ9.w8EsymJIi6WmIEneNSAflXChVzmUBSOXNWzNNRCpfIU"}
-{"level":"info","ts":"2026-02-11T07:10:34.030+0800","caller":"middleware/auth.go:60","msg":"Auth: User authenticated","user_id":1,"name":"AsperTheGhost","role":"user"}
-{"level":"info","ts":"2026-02-11T07:10:34.030+0800","caller":"service/user_service.go:159","msg":"UserService: GetAll"}
-{"level":"info","ts":"2026-02-11T07:10:34.627+0800","caller":"service/user_service.go:169","msg":"UserService: GetAll successful","count":1}
-{"level":"info","ts":"2026-02-11T07:10:34.628+0800","caller":"middleware/logger.go:19","msg":"Incoming request","method":"GET","path":"/api/users","status":200,"client_ip":"::1","latency":0.597736829}
