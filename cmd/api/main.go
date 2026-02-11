@@ -39,9 +39,15 @@ func main() {
 	logger.Info("Database connected successfully")
 
 	userRepo := repository.NewUserRepository(db)
+	planeRepo := repository.NewPlaneRepository(db)
+	planePartRepo := repository.NewPlanePartRepository(db)
 	jwtSvc := service.NewJWTService()
 	userSvc := service.NewUserService(userRepo, jwtSvc, logger)
+	planeSvc := service.NewPlaneService(planeRepo, logger)
+	planePartSvc := service.NewPlanePartService(planeRepo, planePartRepo, logger)
 	userCtrl := controller.NewUserController(userSvc, jwtSvc)
+	planeCtrl := controller.NewPlaneController(planeSvc)
+	planePartCtrl := controller.NewPlanePartController(planePartSvc)
 
 	router := gin.New()
 	router.Use(gin.Recovery())
@@ -57,6 +63,7 @@ func main() {
 
 	api := router.Group("/api")
 	routers.SetupUserRoutes(api, userCtrl, jwtSvc, logger)
+	routers.SetupPlaneRoutes(api, planeCtrl, planePartCtrl, jwtSvc, logger)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -74,7 +81,6 @@ func initDatabase(logger *util.Logger) (*gorm.DB, error) {
 		return nil, nil
 	}
 
-	// Create a GORM logger that writes to Zap
 	gormConfig := &gorm.Config{
 		Logger: util.NewGormLogger(logger.Logger),
 	}

@@ -7,13 +7,19 @@ build:
 push:
 	@git add .
 	@git commit -m "$(m)"
-	@git push origin main
+	@git push
 
 branch:
 	@git checkout -b $(b)
 	@git add .
 	@git commit -m "$(m)"
 	@git push --set-upstream origin $(b)
+
+merge:
+	@git checkout main
+	@git pull origin main
+	@git merge $(b)
+	@git push origin main
 
 ping:
 	@curl http://localhost:8080/ping

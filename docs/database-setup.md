@@ -55,6 +55,33 @@ type User struct {
 }
 ```
 
+### planes
+```sql
+CREATE TABLE planes (
+    id SERIAL PRIMARY KEY,
+    tail_number VARCHAR(50) UNIQUE NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### plane_parts
+```sql
+CREATE TABLE plane_parts (
+    id SERIAL PRIMARY KEY,
+    plane_id INTEGER NOT NULL REFERENCES planes(id) ON DELETE CASCADE,
+    part_name VARCHAR(255) NOT NULL,
+    serial_number VARCHAR(100) UNIQUE NOT NULL,
+    category VARCHAR(150) NOT NULL,
+    usage_hours NUMERIC(10,2) DEFAULT 0,
+    usage_limit_hours NUMERIC(10,2) NOT NULL,
+    usage_percent NUMERIC GENERATED ALWAYS AS 
+        ((usage_hours / usage_limit_hours) * 100) STORED,
+    installed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+
 **Note:** The `json:"-"` tag prevents password from being serialized in JSON responses.
 
 ## Connecting to Supabase
