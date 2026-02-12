@@ -2,84 +2,71 @@ package util
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	gormLogger "gorm.io/gorm/logger"
 )
 
-const (
-	LogPath = "logs/api.log"
-)
+type Logger struct{}
 
-// Embeds *zap.Logger so it can be used wherever *zap.Logger is expected
-type Logger struct {
-	*zap.Logger
+func NewLogger() *Logger {
+	return &Logger{}
 }
 
-// NewLogger creates a new logger instance
-func NewLogger() (*Logger, error) {
-	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{LogPath}
-	config.EncoderConfig = zap.NewProductionEncoderConfig()
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-
-	logger, err := config.Build()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Logger{Logger: logger}, nil
+func formatTime() string {
+	return time.Now().Format("2006-01-02 15:04:05")
 }
 
-// NewLoggerWithConfig creates a logger with custom configuration
-func NewLoggerWithConfig(outputPaths []string, level zapcore.Level) (*Logger, error) {
-	config := zap.NewProductionConfig()
-	config.OutputPaths = outputPaths
-	config.Level = zap.NewAtomicLevelAt(level)
-	config.EncoderConfig = zap.NewProductionEncoderConfig()
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-
-	logger, err := config.Build()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Logger{Logger: logger}, nil
+func (l *Logger) Info(message string, keysAndValues ...interface{}) {
+	logWithFormat("INFO", message, keysAndValues...)
 }
 
-// EnsureLogDirectory creates the log directory if it doesn't exist
-func EnsureLogDirectory() error {
-	if _, err := os.Stat("logs"); os.IsNotExist(err) {
-		if err := os.Mkdir("logs", 0755); err != nil {
-			return err
+func (l *Logger) Warn(message string, keysAndValues ...interface{}) {
+	logWithFormat("WARN", message, keysAndValues...)
+}
+
+func (l *Logger) Error(message string, keysAndValues ...interface{}) {
+	logWithFormat("ERROR", message, keysAndValues...)
+}
+
+func (l *Logger) Debug(message string, keysAndValues ...interface{}) {
+	logWithFormat("DEBUG", message, keysAndValues...)
+}
+
+func (l *Logger) Fatal(message string, keysAndValues ...interface{}) {
+	logWithFormat("FATAL", message, keysAndValues...)
+	os.Exit(1)
+}
+
+func logWithFormat(level, message string, keysAndValues ...interface{}) {
+	logLine := fmt.Sprintf("[%s] %s: %s", formatTime(), level, message)
+
+	if len(keysAndValues) > 0 {
+		logLine += " |"
+		for i := 0; i < len(keysAndValues); i += 2 {
+			if i+1 < len(keysAndValues) {
+				key, ok := keysAndValues[i].(string)
+				if ok {
+					logLine += fmt.Sprintf(" %s=%v", key, keysAndValues[i+1])
+				}
+			}
 		}
 	}
 
-	// Create the log file if it doesn't exist
-	if _, err := os.Stat(LogPath); os.IsNotExist(err) {
-		file, err := os.Create(LogPath)
-		if err != nil {
-			return err
-		}
-		file.Close()
-	}
-
-	return nil
+	fmt.Println(logLine)
 }
 
-type GormLogger struct {
-	logger *zap.Logger
-}
+type GormLogger struct{}
 
-func NewGormLogger(logger *zap.Logger) *GormLogger {
-	return &GormLogger{logger: logger}
+func NewGormLogger() *GormLogger {
+	return &GormLogger{}
 }
 
 func (l *GormLogger) Printf(format string, args ...interface{}) {
-	l.logger.Info(format, zap.Any("args", args))
+	msg := fmt.Sprintf(format, args...)
+	logWithFormat("SQL", msg)
 }
 
 func (l *GormLogger) LogMode(level gormLogger.LogLevel) gormLogger.Interface {
@@ -87,24 +74,28 @@ func (l *GormLogger) LogMode(level gormLogger.LogLevel) gormLogger.Interface {
 }
 
 func (l *GormLogger) Info(ctx context.Context, msg string, args ...interface{}) {
-	l.logger.Info(msg, zap.Any("args", args))
+	logWithFormat("SQL-INFO", msg, args...)
 }
 
 func (l *GormLogger) Warn(ctx context.Context, msg string, args ...interface{}) {
-	l.logger.Warn(msg, zap.Any("args", args))
+	logWithFormat("SQL-WARN", msg, args...)
 }
 
 func (l *GormLogger) Error(ctx context.Context, msg string, args ...interface{}) {
-	l.logger.Error(msg, zap.Any("args", args))
+	logWithFormat("SQL-ERROR", msg, args...)
 }
 
 func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	elapsed := time.Since(begin)
 	sql, rows := fc()
-	l.logger.Debug("SQL Trace",
-		zap.Duration("elapsed", elapsed),
-		zap.String("sql", sql),
-		zap.Int64("rows", rows),
-		zap.Error(err),
+	logWithFormat("SQL-TRACE", "SQL executed",
+		"elapsed", elapsed,
+		"sql", sql,
+		"rows", rows,
+		"error", err,
 	)
+}
+
+func EnsureLogDirectory() error {
+	return nil
 }

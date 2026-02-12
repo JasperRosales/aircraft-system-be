@@ -19,7 +19,14 @@ func NewPlanePartController(svc *service.PlanePartService) *PlanePartController 
 }
 
 func (c *PlanePartController) AddPart(ctx *gin.Context) {
+	planeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid plane ID"})
+		return
+	}
+
 	var req models.CreatePlanePartRequest
+	req.PlaneID = planeID
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -63,12 +70,11 @@ func (c *PlanePartController) GetPart(ctx *gin.Context) {
 }
 
 func (c *PlanePartController) GetPartsByPlane(ctx *gin.Context) {
-	planeID, err := strconv.ParseInt(ctx.Param("planeId"), 10, 64)
+	planeID, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid plane ID"})
 		return
 	}
-
 	category := ctx.Query("category")
 
 	parts, err := c.service.GetPartsByPlane(ctx.Request.Context(), planeID, &category)

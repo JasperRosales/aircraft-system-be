@@ -1,12 +1,10 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -21,20 +19,10 @@ import (
 func main() {
 	godotenv.Load()
 
-	// Ensure log directory exists
-	if err := util.EnsureLogDirectory(); err != nil {
-		log.Printf("Warning: Failed to create log directory: %v", err)
-	}
-
-	logger, err := util.NewLogger()
-	if err != nil {
-		panic("Failed to initialize logger: " + err.Error())
-	}
-	defer logger.Sync()
-
+	logger := util.NewLogger()
 	db, err := initDatabase(logger)
 	if err != nil {
-		logger.Fatal("Failed to initialize database", zap.Error(err))
+		logger.Fatal("Failed to initialize database", "error", err)
 	}
 	logger.Info("Database connected successfully")
 
@@ -51,6 +39,7 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Recovery())
+	router.Use(middleware.CORSMiddleware())
 	router.Use(middleware.LoggerMiddleware(logger))
 
 	router.GET("/ping", func(c *gin.Context) {
@@ -67,11 +56,12 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		logger.Fatal("PORT environment variable not set")
+ 	   	port = "8080"
+    	logger.Warn("PORT not set, defaulting to 8080")
 	}
 
-	logger.Info("Starting server", zap.String("port", port))
 	router.Run(":" + port)
+
 }
 
 func initDatabase(logger *util.Logger) (*gorm.DB, error) {
@@ -82,7 +72,7 @@ func initDatabase(logger *util.Logger) (*gorm.DB, error) {
 	}
 
 	gormConfig := &gorm.Config{
-		Logger: util.NewGormLogger(logger.Logger),
+		Logger: util.NewGormLogger(),
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), gormConfig)

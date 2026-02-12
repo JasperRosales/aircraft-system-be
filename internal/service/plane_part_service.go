@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"go.uber.org/zap"
-
 	"github.com/JasperRosales/aircraft-system-be/internal/models"
 	"github.com/JasperRosales/aircraft-system-be/internal/repository"
 	"github.com/JasperRosales/aircraft-system-be/internal/util"
@@ -36,22 +34,22 @@ func NewPlanePartService(planeRepo *repository.PlaneRepository, planePartRepo *r
 
 func (s *PlanePartService) AddPart(ctx context.Context, req *models.CreatePlanePartRequest) (*models.PlanePartResponse, error) {
 	s.logger.Info("PlanePartService: Adding new part to plane",
-		zap.Int64("plane_id", req.PlaneID),
-		zap.String("part_name", req.PartName),
-		zap.String("serial_number", req.SerialNumber),
+		"plane_id", req.PlaneID,
+		"part_name", req.PartName,
+		"serial_number", req.SerialNumber,
 	)
 
 	plane, err := s.planeRepo.GetByID(ctx, req.PlaneID)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to verify plane",
-			zap.Int64("plane_id", req.PlaneID),
-			zap.Error(err),
+			"plane_id", req.PlaneID,
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to verify plane: %w", err)
 	}
 	if plane == nil {
 		s.logger.Warn("PlanePartService: Plane not found",
-			zap.Int64("plane_id", req.PlaneID),
+			"plane_id", req.PlaneID,
 		)
 		return nil, errors.New(PlaneNotFoundErrPart)
 	}
@@ -59,14 +57,14 @@ func (s *PlanePartService) AddPart(ctx context.Context, req *models.CreatePlaneP
 	existing, err := s.planePartRepo.GetBySerialNumber(ctx, req.SerialNumber)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to check existing part",
-			zap.String("serial_number", req.SerialNumber),
-			zap.Error(err),
+			"serial_number", req.SerialNumber,
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to check existing part: %w", err)
 	}
 	if existing != nil {
 		s.logger.Warn("PlanePartService: Part with serial number already exists",
-			zap.String("serial_number", req.SerialNumber),
+			"serial_number", req.SerialNumber,
 		)
 		return nil, errors.New(PlanePartExistsErr)
 	}
@@ -82,16 +80,16 @@ func (s *PlanePartService) AddPart(ctx context.Context, req *models.CreatePlaneP
 
 	if err := s.planePartRepo.Create(ctx, part); err != nil {
 		s.logger.Error("PlanePartService: Failed to create part",
-			zap.String("serial_number", req.SerialNumber),
-			zap.Error(err),
+			"serial_number", req.SerialNumber,
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to create part: %w", err)
 	}
 
 	s.logger.Info("PlanePartService: Part added successfully",
-		zap.Int64("part_id", part.ID),
-		zap.Int64("plane_id", req.PlaneID),
-		zap.String("serial_number", req.SerialNumber),
+		"part_id", part.ID,
+		"plane_id", req.PlaneID,
+		"serial_number", req.SerialNumber,
 	)
 
 	resp := part.ToResponse()
@@ -100,20 +98,20 @@ func (s *PlanePartService) AddPart(ctx context.Context, req *models.CreatePlaneP
 
 func (s *PlanePartService) GetPart(ctx context.Context, id int64) (*models.PlanePartResponse, error) {
 	s.logger.Info("PlanePartService: GetPart",
-		zap.Int64("part_id", id),
+		"part_id", id,
 	)
 
 	part, err := s.planePartRepo.GetByID(ctx, id)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to get part",
-			zap.Int64("part_id", id),
-			zap.Error(err),
+			"part_id", id,
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to get part: %w", err)
 	}
 	if part == nil {
 		s.logger.Warn("PlanePartService: Part not found",
-			zap.Int64("part_id", id),
+			"part_id", id,
 		)
 		return nil, errors.New(PlanePartNotFoundErr)
 	}
@@ -124,21 +122,21 @@ func (s *PlanePartService) GetPart(ctx context.Context, id int64) (*models.Plane
 
 func (s *PlanePartService) GetPartsByPlane(ctx context.Context, planeID int64, category *string) ([]models.PlanePartResponse, error) {
 	s.logger.Info("PlanePartService: GetPartsByPlane",
-		zap.Int64("plane_id", planeID),
+		"plane_id", planeID,
 	)
 
 	// Verify plane exists
 	plane, err := s.planeRepo.GetByID(ctx, planeID)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to verify plane",
-			zap.Int64("plane_id", planeID),
-			zap.Error(err),
+			"plane_id", planeID,
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to verify plane: %w", err)
 	}
 	if plane == nil {
 		s.logger.Warn("PlanePartService: Plane not found",
-			zap.Int64("plane_id", planeID),
+			"plane_id", planeID,
 		)
 		return nil, errors.New(PlaneNotFoundErrPart)
 	}
@@ -148,9 +146,9 @@ func (s *PlanePartService) GetPartsByPlane(ctx context.Context, planeID int64, c
 		parts, err = s.planePartRepo.GetByPlaneIDAndCategory(ctx, planeID, *category)
 		if err != nil {
 			s.logger.Error("PlanePartService: Failed to get parts by category",
-				zap.Int64("plane_id", planeID),
-				zap.String("category", *category),
-				zap.Error(err),
+				"plane_id", planeID,
+				"category", *category,
+				"error", err,
 			)
 			return nil, fmt.Errorf("failed to get parts: %w", err)
 		}
@@ -158,16 +156,16 @@ func (s *PlanePartService) GetPartsByPlane(ctx context.Context, planeID int64, c
 		parts, err = s.planePartRepo.GetByPlaneID(ctx, planeID)
 		if err != nil {
 			s.logger.Error("PlanePartService: Failed to get parts",
-				zap.Int64("plane_id", planeID),
-				zap.Error(err),
+				"plane_id", planeID,
+				"error", err,
 			)
 			return nil, fmt.Errorf("failed to get parts: %w", err)
 		}
 	}
 
 	s.logger.Info("PlanePartService: GetPartsByPlane successful",
-		zap.Int64("plane_id", planeID),
-		zap.Int("count", len(parts)),
+		"plane_id", planeID,
+		"count", len(parts),
 	)
 
 	responses := make([]models.PlanePartResponse, len(parts))
@@ -184,13 +182,13 @@ func (s *PlanePartService) GetAllParts(ctx context.Context) ([]models.PlanePartR
 	parts, err := s.planePartRepo.GetAll(ctx)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to get all parts",
-			zap.Error(err),
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to get all parts: %w", err)
 	}
 
 	s.logger.Info("PlanePartService: GetAllParts successful",
-		zap.Int("count", len(parts)),
+		"count", len(parts),
 	)
 
 	responses := make([]models.PlanePartResponse, len(parts))
@@ -203,20 +201,20 @@ func (s *PlanePartService) GetAllParts(ctx context.Context) ([]models.PlanePartR
 
 func (s *PlanePartService) UpdatePart(ctx context.Context, id int64, req *models.UpdatePlanePartRequest) (*models.PlanePartResponse, error) {
 	s.logger.Info("PlanePartService: UpdatePart",
-		zap.Int64("part_id", id),
+		"part_id", id,
 	)
 
 	part, err := s.planePartRepo.GetByID(ctx, id)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to get part",
-			zap.Int64("part_id", id),
-			zap.Error(err),
+			"part_id", id,
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to get part: %w", err)
 	}
 	if part == nil {
 		s.logger.Warn("PlanePartService: Part not found",
-			zap.Int64("part_id", id),
+			"part_id", id,
 		)
 		return nil, errors.New(PlanePartNotFoundErr)
 	}
@@ -232,14 +230,14 @@ func (s *PlanePartService) UpdatePart(ctx context.Context, id int64, req *models
 			existing, err := s.planePartRepo.GetBySerialNumber(ctx, *req.SerialNumber)
 			if err != nil {
 				s.logger.Error("PlanePartService: Failed to check existing part",
-					zap.String("serial_number", *req.SerialNumber),
-					zap.Error(err),
+					"serial_number", *req.SerialNumber,
+					"error", err,
 				)
 				return nil, fmt.Errorf("failed to check existing part: %w", err)
 			}
 			if existing != nil {
 				s.logger.Warn("PlanePartService: Part with serial number already exists",
-					zap.String("serial_number", *req.SerialNumber),
+					"serial_number", *req.SerialNumber,
 				)
 				return nil, errors.New(PlanePartExistsErr)
 			}
@@ -252,14 +250,14 @@ func (s *PlanePartService) UpdatePart(ctx context.Context, id int64, req *models
 
 	if err := s.planePartRepo.Update(ctx, part); err != nil {
 		s.logger.Error("PlanePartService: Failed to update part",
-			zap.Int64("part_id", id),
-			zap.Error(err),
+			"part_id", id,
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to update part: %w", err)
 	}
 
 	s.logger.Info("PlanePartService: UpdatePart successful",
-		zap.Int64("part_id", id),
+		"part_id", id,
 	)
 
 	resp := part.ToResponse()
@@ -268,30 +266,30 @@ func (s *PlanePartService) UpdatePart(ctx context.Context, id int64, req *models
 
 func (s *PlanePartService) UpdatePartUsage(ctx context.Context, id int64, req *models.UpdatePartUsageRequest) (*models.PlanePartResponse, error) {
 	s.logger.Info("PlanePartService: UpdatePartUsage",
-		zap.Int64("part_id", id),
-		zap.Float64("new_usage_hours", req.UsageHours),
+		"part_id", id,
+		"new_usage_hours", req.UsageHours,
 	)
 
 	part, err := s.planePartRepo.GetByID(ctx, id)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to get part",
-			zap.Int64("part_id", id),
-			zap.Error(err),
+			"part_id", id,
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to get part: %w", err)
 	}
 	if part == nil {
 		s.logger.Warn("PlanePartService: Part not found",
-			zap.Int64("part_id", id),
+			"part_id", id,
 		)
 		return nil, errors.New(PlanePartNotFoundErr)
 	}
 
 	if req.UsageHours > part.UsageLimitHours {
 		s.logger.Warn("PlanePartService: Usage hours exceeds limit",
-			zap.Int64("part_id", id),
-			zap.Float64("usage_hours", req.UsageHours),
-			zap.Float64("limit_hours", part.UsageLimitHours),
+			"part_id", id,
+			"usage_hours", req.UsageHours,
+			"limit_hours", part.UsageLimitHours,
 		)
 		return nil, errors.New(InvalidUsageHoursErr)
 	}
@@ -300,15 +298,15 @@ func (s *PlanePartService) UpdatePartUsage(ctx context.Context, id int64, req *m
 
 	if err := s.planePartRepo.UpdateUsage(ctx, part); err != nil {
 		s.logger.Error("PlanePartService: Failed to update usage",
-			zap.Int64("part_id", id),
-			zap.Error(err),
+			"part_id", id,
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to update usage: %w", err)
 	}
 
 	s.logger.Info("PlanePartService: UpdatePartUsage successful",
-		zap.Int64("part_id", id),
-		zap.Float64("usage_percent", part.UsagePercent),
+		"part_id", id,
+		"usage_percent", part.UsagePercent,
 	)
 
 	resp := part.ToResponse()
@@ -317,34 +315,34 @@ func (s *PlanePartService) UpdatePartUsage(ctx context.Context, id int64, req *m
 
 func (s *PlanePartService) DeletePart(ctx context.Context, id int64) error {
 	s.logger.Info("PlanePartService: DeletePart",
-		zap.Int64("part_id", id),
+		"part_id", id,
 	)
 
 	part, err := s.planePartRepo.GetByID(ctx, id)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to get part",
-			zap.Int64("part_id", id),
-			zap.Error(err),
+			"part_id", id,
+			"error", err,
 		)
 		return fmt.Errorf("failed to get part: %w", err)
 	}
 	if part == nil {
 		s.logger.Warn("PlanePartService: Part not found",
-			zap.Int64("part_id", id),
+			"part_id", id,
 		)
 		return errors.New(PlanePartNotFoundErr)
 	}
 
 	if err := s.planePartRepo.Delete(ctx, id); err != nil {
 		s.logger.Error("PlanePartService: Failed to delete part",
-			zap.Int64("part_id", id),
-			zap.Error(err),
+			"part_id", id,
+			"error", err,
 		)
 		return fmt.Errorf("failed to delete part: %w", err)
 	}
 
 	s.logger.Info("PlanePartService: DeletePart successful",
-		zap.Int64("part_id", id),
+		"part_id", id,
 	)
 
 	return nil
@@ -354,19 +352,19 @@ func (s *PlanePartService) DeletePart(ctx context.Context, id int64) error {
 
 func (s *PlanePartService) GetPartsNeedingMaintenance(ctx context.Context, thresholdPercent float64) ([]models.PlanePartResponse, error) {
 	s.logger.Info("PlanePartService: GetPartsNeedingMaintenance",
-		zap.Float64("threshold", thresholdPercent),
+		"threshold", thresholdPercent,
 	)
 
 	parts, err := s.planePartRepo.GetNeedingMaintenance(ctx, thresholdPercent)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to get parts needing maintenance",
-			zap.Error(err),
+			"error", err,
 		)
 		return nil, fmt.Errorf("failed to get parts: %w", err)
 	}
 
 	s.logger.Info("PlanePartService: GetPartsNeedingMaintenance successful",
-		zap.Int("count", len(parts)),
+		"count", len(parts),
 	)
 
 	responses := make([]models.PlanePartResponse, len(parts))
@@ -379,20 +377,20 @@ func (s *PlanePartService) GetPartsNeedingMaintenance(ctx context.Context, thres
 
 func (s *PlanePartService) GetPlaneWithParts(ctx context.Context, id int64) (*models.PlaneResponse, []models.PlanePartResponse, error) {
 	s.logger.Info("PlanePartService: GetPlaneWithParts",
-		zap.Int64("plane_id", id),
+		"plane_id", id,
 	)
 
 	plane, err := s.planeRepo.GetByID(ctx, id)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to get plane",
-			zap.Int64("plane_id", id),
-			zap.Error(err),
+			"plane_id", id,
+			"error", err,
 		)
 		return nil, nil, fmt.Errorf("failed to get plane: %w", err)
 	}
 	if plane == nil {
 		s.logger.Warn("PlanePartService: Plane not found",
-			zap.Int64("plane_id", id),
+			"plane_id", id,
 		)
 		return nil, nil, errors.New(PlaneNotFoundErrPart)
 	}
@@ -400,8 +398,8 @@ func (s *PlanePartService) GetPlaneWithParts(ctx context.Context, id int64) (*mo
 	parts, err := s.planePartRepo.GetByPlaneIDWithDetails(ctx, id)
 	if err != nil {
 		s.logger.Error("PlanePartService: Failed to get plane parts",
-			zap.Int64("plane_id", id),
-			zap.Error(err),
+			"plane_id", id,
+			"error", err,
 		)
 		return nil, nil, fmt.Errorf("failed to get parts: %w", err)
 	}

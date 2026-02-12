@@ -24,8 +24,8 @@ func SetupPlaneRoutes(router *gin.RouterGroup, planeCtrl *controller.PlaneContro
 		planes.GET("/:id/with-parts", planeCtrl.GetPlaneWithParts)
 
 		// Plane Parts
-		planes.POST("/:planeId/parts", planePartCtrl.AddPart)
-		planes.GET("/:planeId/parts", planePartCtrl.GetPartsByPlane)
+		planes.POST("/:id/parts", planePartCtrl.AddPart)
+		planes.GET("/:id/parts", planePartCtrl.GetPartsByPlane)
 		planes.GET("/parts", planePartCtrl.GetAllParts)
 		planes.GET("/parts/:partId", planePartCtrl.GetPart)
 		planes.PUT("/parts/:partId", planePartCtrl.UpdatePart)
