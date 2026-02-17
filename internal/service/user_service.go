@@ -62,7 +62,12 @@ func (s *UserService) Register(ctx context.Context, req *models.RegisterRequest)
 	user := &models.User{
 		Name:     req.Name,
 		Password: hashedPassword,
-		Role:     "user",
+		Role:     req.Role,
+	}
+
+	// Default to "user" if role is not provided or invalid
+	if user.Role == "" {
+		user.Role = "user"
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
