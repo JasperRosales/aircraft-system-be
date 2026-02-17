@@ -22,7 +22,11 @@ func (r *PlanePartRepository) Create(ctx context.Context, part *models.PlanePart
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	result := r.db.WithContext(ctx).Create(part)
+	// Use raw SQL to avoid issues with the generated usage_percent column
+	result := r.db.WithContext(ctx).Exec(`
+		INSERT INTO plane_parts (plane_id, part_name, serial_number, category, usage_hours, usage_limit_hours, installed_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+	`, part.PlaneID, part.PartName, part.SerialNumber, part.Category, part.UsageHours, part.UsageLimitHours, part.InstalledAt)
 	if result.Error != nil {
 		return fmt.Errorf("failed to create plane part: %w", result.Error)
 	}

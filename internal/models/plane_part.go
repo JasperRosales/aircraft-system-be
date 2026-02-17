@@ -12,11 +12,10 @@ type PlanePart struct {
 	Category        string    `json:"category" gorm:"type:varchar(150);not null;index"`
 	UsageHours      float64   `json:"usage_hours" gorm:"type:numeric(10,2);default:0"`
 	UsageLimitHours float64   `json:"usage_limit_hours" gorm:"type:numeric(10,2);not null"`
-	UsagePercent    float64   `json:"usage_percent" gorm:"type:numericgenerated always as (usage_hours / usage_limit_hours) * 100 stored"`
+	UsagePercent    *float64  `json:"usage_percent" gorm:"-"`
 	InstalledAt     time.Time `json:"installed_at" gorm:"autoCreateTime"`
 	Plane           *Plane    `json:"plane,omitempty" gorm:"foreignKey:PlaneID"`
 }
-
 
 type CreatePlanePartRequest struct {
 	PlaneID         int64   `json:"plane_id" binding:"required"`
@@ -38,7 +37,6 @@ type UpdatePartUsageRequest struct {
 	UsageHours float64 `json:"usage_hours" binding:"required,gte=0"`
 }
 
-
 type PlanePartResponse struct {
 	ID              int64     `json:"id"`
 	PlaneID         int64     `json:"plane_id"`
@@ -51,9 +49,8 @@ type PlanePartResponse struct {
 	InstalledAt     time.Time `json:"installed_at"`
 }
 
-
 func (pp *PlanePart) ToResponse() PlanePartResponse {
-	return PlanePartResponse{
+	resp := PlanePartResponse{
 		ID:              pp.ID,
 		PlaneID:         pp.PlaneID,
 		PartName:        pp.PartName,
@@ -61,9 +58,14 @@ func (pp *PlanePart) ToResponse() PlanePartResponse {
 		Category:        pp.Category,
 		UsageHours:      pp.UsageHours,
 		UsageLimitHours: pp.UsageLimitHours,
-		UsagePercent:    pp.UsagePercent,
 		InstalledAt:     pp.InstalledAt,
 	}
+	if pp.UsagePercent != nil {
+		resp.UsagePercent = *pp.UsagePercent
+	} else if pp.UsageLimitHours > 0 {
+		resp.UsagePercent = (pp.UsageHours / pp.UsageLimitHours) * 100
+	}
+	return resp
 }
 
 func (pp *PlanePart) ToResponseWithPlane() PlanePartResponse {
@@ -73,7 +75,6 @@ func (pp *PlanePart) ToResponseWithPlane() PlanePartResponse {
 	}
 	return resp
 }
-
 
 type PlanePartsByPlaneQuery struct {
 	Category *string `form:"category"`
