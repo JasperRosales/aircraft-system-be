@@ -164,3 +164,23 @@ func (c *UserController) Logout(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
+
+func (c *UserController) GetMe(ctx *gin.Context) {
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	resp, err := c.service.GetMe(ctx.Request.Context(), userID.(int64))
+	if err != nil {
+		if err.Error() == service.UserNotFoundErr {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, resp)
+}

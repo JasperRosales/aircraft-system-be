@@ -20,6 +20,7 @@ func SetupUserRoutes(router *gin.RouterGroup, userCtrl *controller.UserControlle
 	protected := users.Group("")
 	protected.Use(middleware.AuthMiddleware(logger, jwtSvc))
 	{
+		protected.GET("/me", userCtrl.GetMe)
 		protected.GET("/:id", userCtrl.GetByID)
 		protected.GET("", userCtrl.GetAll)
 		protected.PUT("/:id", userCtrl.Update)

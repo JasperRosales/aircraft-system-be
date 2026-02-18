@@ -269,3 +269,33 @@ func (s *UserService) Delete(ctx context.Context, id int64) error {
 
 	return nil
 }
+
+func (s *UserService) GetMe(ctx context.Context, userID int64) (*models.UserResponse, error) {
+	s.logger.Info("UserService: GetMe",
+		"user_id", userID,
+	)
+
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		s.logger.Error("UserService: Failed to get user",
+			"user_id", userID,
+			"error", err,
+		)
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		s.logger.Warn("UserService: User not found",
+			"user_id", userID,
+		)
+		return nil, errors.New(UserNotFoundErr)
+	}
+
+	s.logger.Info("UserService: GetMe successful",
+		"user_id", userID,
+		"name", user.Name,
+		"role", user.Role,
+	)
+
+	resp := user.ToResponse()
+	return &resp, nil
+}

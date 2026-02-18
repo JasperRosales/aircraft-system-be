@@ -27,6 +27,7 @@ Database (Supabase/PostgreSQL)
 | POST | `/api/users/register` | No | Register a new user |
 | POST | `/api/users/login` | No | Login and receive auth cookie |
 | POST | `/api/users/logout` | No | Clear auth cookie |
+| GET | `/api/users/me` | Yes | Get current authenticated user |
 | GET | `/api/users/:id` | Yes | Get user by ID |
 | GET | `/api/users` | Yes | Get all users |
 | PUT | `/api/users/:id` | Yes | Update user |
@@ -85,7 +86,8 @@ protected.Use(middleware.RoleMiddleware("admin"))
 ```json
 {
   "name": "string (required, 2-255 chars)",
-  "password": "string (required, min 6 chars)"
+  "password": "string (required, min 6 chars)",
+  "role": "string (optional, 'user', 'mechanic', or 'admin', default: 'user')"
 }
 ```
 
@@ -96,6 +98,25 @@ protected.Use(middleware.RoleMiddleware("admin"))
   "password": "string (required)"
 }
 ```
+
+### Get Current User Request
+**Endpoint:** `GET /api/users/me`
+
+**Authentication:** Required (JWT token via cookie or Bearer header)
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "name": "testuser",
+  "role": "user",
+  "created_at": "2026-02-10T12:34:56Z"
+}
+```
+
+**Error Responses:**
+- `401 Unauthorized`: User not authenticated
+- `404 Not Found`: User not found
 
 ### Update Request
 ```json
@@ -145,6 +166,7 @@ type JWTClaims struct {
 | Role | Description |
 |------|-------------|
 | `user` | Default role for regular users |
+| `mechanic` | Maintenance personnel with parts management access |
 | `admin` | Administrator with elevated privileges |
 
 ## Environment Variables
@@ -173,19 +195,22 @@ curl -X POST http://localhost:8080/api/users/login \
 # 3. Get all users (protected) - requires cookie
 curl -X GET http://localhost:8080/api/users -b cookies.txt
 
-# 4. Get user by ID (protected)
+# 4. Get current user (protected)
+curl -X GET http://localhost:8080/api/users/me -b cookies.txt
+
+# 5. Get user by ID (protected)
 curl -X GET http://localhost:8080/api/users/1 -b cookies.txt
 
-# 5. Update user (protected)
+# 6. Update user (protected)
 curl -X PUT http://localhost:8080/api/users/1 \
   -H "Content-Type: application/json" \
   -d '{"name":"newname"}' \
   -b cookies.txt
 
-# 6. Delete user (protected)
+# 7. Delete user (protected)
 curl -X DELETE http://localhost:8080/api/users/1 -b cookies.txt
 
-# 7. Logout (clears cookie)
+# 8. Logout (clears cookie)
 curl -X POST http://localhost:8080/api/users/logout -c cookies.txt
 
 # Testing without auth (will fail for protected routes)
