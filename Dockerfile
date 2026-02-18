@@ -19,9 +19,10 @@ FROM gcr.io/distroless/base-debian12
 
 WORKDIR /app
 
-COPY --from=builder /app/app /app/app
+COPY --from=builder --chown=nonroot:nonroot /app/app /app/app
 
 EXPOSE 8080
 
 USER nonroot:nonroot
 CMD ["/app/app"]
+

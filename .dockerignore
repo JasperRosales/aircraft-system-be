@@ -11,7 +11,6 @@
 .DS_Store
 
 # Docker files (not needed inside container)
-Dockerfile
 docker-compose*.yml
 .air.toml
 

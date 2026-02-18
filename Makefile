@@ -1,6 +1,10 @@
 dev:
 	air
 
+init:
+	@go mod tidy
+	@touch .env docker-compose.yaml
+
 build:
 	@go build -o bin/app cmd/app/main.go
 

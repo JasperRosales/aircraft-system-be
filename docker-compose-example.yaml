@@ -12,7 +12,8 @@ services:
     environment:
       SECRET: 
       TOKEN_EXP: 
+      ORIGIN:
       GOOSE_DRIVER:
       GOOSE_DBSTRING: 
       GOOSE_MIGRATION_DIR: "./database/migrations"
-    command: go run ./cmd/api
+    command: ["/app/app"]
