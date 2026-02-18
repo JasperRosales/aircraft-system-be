@@ -16,11 +16,15 @@ type UserController struct {
 }
 
 func NewUserController(svc *service.UserService, jwtSvc *service.JWTService) *UserController {
-	return &UserController{service: svc, jwtService: jwtSvc}
+	return &UserController{
+		service:    svc,
+		jwtService: jwtSvc,
+	}
 }
 
 func (c *UserController) Register(ctx *gin.Context) {
 	var req models.RegisterRequest
+
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -41,6 +45,7 @@ func (c *UserController) Register(ctx *gin.Context) {
 
 func (c *UserController) Login(ctx *gin.Context) {
 	var req models.LoginRequest
+
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -56,19 +61,56 @@ func (c *UserController) Login(ctx *gin.Context) {
 		return
 	}
 
-	ctx.SetCookie(
-		service.CookieName,
-		resp.Token,
-		int(c.jwtService.GetExpiryDuration().Seconds()),
-		"/",
-		"",
-		false,
-		true, // HttpOnly
-	)
+	// 🔥 PRODUCTION COOKIE (Render + HTTPS + Cross-Origin Safe)
+	http.SetCookie(ctx.Writer, &http.Cookie{
+		Name:     service.CookieName,
+		Value:    resp.Token,
+		Path:     "/",
+		MaxAge:   int(c.jwtService.GetExpiryDuration().Seconds()),
+		HttpOnly: true,
+		Secure:   true,                  // REQUIRED for HTTPS
+		SameSite: http.SameSiteNoneMode, // REQUIRED for cross-origin
+	})
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"user": resp.User,
 	})
+}
+
+func (c *UserController) Logout(ctx *gin.Context) {
+	http.SetCookie(ctx.Writer, &http.Cookie{
+		Name:     service.CookieName,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	})
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "logged out successfully",
+	})
+}
+
+func (c *UserController) GetMe(ctx *gin.Context) {
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	resp, err := c.service.GetMe(ctx.Request.Context(), userID.(int64))
+	if err != nil {
+		if err.Error() == service.UserNotFoundErr {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, resp)
 }
 
 func (c *UserController) GetByID(ctx *gin.Context) {
@@ -149,38 +191,4 @@ func (c *UserController) Delete(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusNoContent)
-}
-
-func (c *UserController) Logout(ctx *gin.Context) {
-	ctx.SetCookie(
-		service.CookieName,
-		"",
-		-1,
-		"/",
-		"",
-		false,
-		true,
-	)
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
-}
-
-func (c *UserController) GetMe(ctx *gin.Context) {
-	userID, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-
-	resp, err := c.service.GetMe(ctx.Request.Context(), userID.(int64))
-	if err != nil {
-		if err.Error() == service.UserNotFoundErr {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, resp)
 }

@@ -12,4 +12,4 @@ services:
       GOOSE_DRIVER: "postgres"
       GOOSE_DBSTRING: "postgresql://postgres.nhwpditkyufxixofaxkr:Skurohoshi26@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
       GOOSE_MIGRATION_DIR: "./database/migrations"
-      ORIGIN: http://localhost:5173
+      ORIGIN: https://aircraft-system-client.vercel.app
